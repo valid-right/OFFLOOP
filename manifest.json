@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "OFFLOOP",
+  "version": "0.1.0",
+  "description": "Notices when you have been scrolling for a while and asks you to look away.",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.instagram.com/*",
+        "*://*.tiktok.com/*",
+        "*://*.youtube.com/*",
+        "*://x.com/*",
+        "*://twitter.com/*",
+        "*://*.reddit.com/*",
+        "*://*.facebook.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "OFFLOOP",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
+  },
+  "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
+}

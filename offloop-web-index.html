@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OFFLOOP — Curiosity instead of scrolling</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#09090b;color:#f5f5f5;font-family:Inter,system-ui,-apple-system,sans-serif}
+.app{max-width:460px;min-height:100vh;margin:auto;padding:22px 18px 34px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:42px}
+.logo{font-weight:800;letter-spacing:.18em;font-size:14px}.status{font-size:11px;color:#85858e}
+.screen{display:none;animation:in .22s ease}.screen.active{display:block}@keyframes in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+h1{font-size:38px;line-height:1.02;letter-spacing:-.045em;margin:0 0 12px}h2{font-size:26px;line-height:1.08;letter-spacing:-.025em;margin:0 0 13px}
+p{color:#a5a5ae;line-height:1.55}.small{font-size:13px}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.16em;color:#777780;margin-bottom:18px}
+button{width:100%;padding:16px;border:1px solid #29292f;border-radius:16px;background:#141418;color:#f5f5f5;text-align:left;font-size:14px;cursor:pointer;margin:5px 0;transition:.15s}
+button:hover{background:#1b1b20;border-color:#47474e;transform:translateY(-1px)}.primary{background:#f5f5f5;color:#09090b;border-color:#f5f5f5;text-align:center;font-weight:750}.ghost{border:0;background:transparent;color:#777780;text-align:center}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.grid button{text-align:center}.selected{border-color:#f5f5f5!important;background:#25252b!important}
+.card{border:1px solid #29292f;border-radius:22px;padding:23px;background:linear-gradient(145deg,#151519,#101013);margin-bottom:14px}
+.pill{display:inline-block;background:#202026;color:#aaaab3;border-radius:99px;padding:6px 9px;font-size:10px;letter-spacing:.08em;margin-bottom:20px}
+.choice{font-size:15px}.choice span{float:right;color:#777780}
+.choice .tag{display:block;font-size:11px;color:#777780;margin-top:6px}
+.nav{display:flex;gap:8px;margin-top:25px}.nav button{font-size:11px;text-align:center;padding:11px}
+textarea,input{width:100%;background:#111115;color:#eee;border:1px solid #29292f;border-radius:14px;padding:13px;font:inherit;outline:none}
+textarea{min-height:100px;resize:none}.range{width:100%;accent-color:#eee}.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{border:1px solid #29292f;border-radius:18px;padding:17px}.num{font-size:26px;font-weight:750}.label{font-size:11px;color:#7e7e87;margin-top:5px}
+.depth{border-left:2px solid #414148;padding-left:15px;margin:20px 0}.depth p{margin:0}.choices-title{margin-top:26px;font-size:12px;color:#7f7f88;text-transform:uppercase;letter-spacing:.1em}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top"><div class="logo">OFFLOOP</div><div class="status" id="status">0 exits today</div></header>
+
+<section id="welcome" class="screen active">
+  <div class="pill">AN ANTI-FEED</div>
+  <h1>What are you curious about?</h1>
+  <p>OFFLOOP is built to interrupt automatic scrolling with something finite, interesting, and worth finishing.</p>
+  <button class="primary" onclick="show('profile')">SET UP MY EXPERIENCE</button>
+  <div class="nav"><button onclick="show('home')">SKIP SETUP</button></div>
+</section>
+
+<section id="profile" class="screen">
+  <div class="eyebrow">01 / AGE</div>
+  <h2>Which age group are you in?</h2>
+  <p class="small">This helps us keep prompts and topics appropriate.</p>
+  <div class="grid" id="ages">
+    <button onclick="pickAge(this,'13–15')">13–15</button><button onclick="pickAge(this,'16–17')">16–17</button>
+    <button onclick="pickAge(this,'18–20')">18–20</button><button onclick="pickAge(this,'21–25')">21–25</button>
+    <button onclick="pickAge(this,'26–35')">26–35</button><button onclick="pickAge(this,'36+')">36+</button>
+  </div>
+  <div class="eyebrow" style="margin-top:28px">02 / INTERESTS</div>
+  <h2>Pick a few rabbit holes.</h2>
+  <p class="small">You can change these later. We also learn from what you actually choose.</p>
+  <div class="grid" id="interests">
+    <button onclick="toggleInterest(this,'Psychology')">🧠 Psychology</button>
+    <button onclick="toggleInterest(this,'Space')">🌌 Space</button>
+    <button onclick="toggleInterest(this,'Music')">🎵 Music</button>
+    <button onclick="toggleInterest(this,'Technology')">💻 Technology</button>
+    <button onclick="toggleInterest(this,'Biology')">🧬 Biology</button>
+    <button onclick="toggleInterest(this,'Philosophy')">📚 Philosophy</button>
+    <button onclick="toggleInterest(this,'Art')">🎨 Art</button>
+    <button onclick="toggleInterest(this,'History')">🏛 History</button>
+    <button onclick="toggleInterest(this,'Film')">🎬 Film</button>
+    <button onclick="toggleInterest(this,'Weird')">🌀 Weird stuff</button>
+  </div>
+  <button class="primary" style="margin-top:20px" onclick="saveProfile()">LET'S GO</button>
+</section>
+
+<section id="home" class="screen">
+  <div class="pill">SCROLL INTERRUPTED</div>
+  <h1>What are you actually looking for?</h1>
+  <p>Pick a direction. We won't give you a feed.</p>
+  <div class="choices">
+    <button class="choice" onclick="openThoughts('novelty')">Something interesting <span>→</span><span class="tag">Give me a rabbit hole</span></button>
+    <button class="choice" onclick="openThoughts('thought')">Something to think about <span>→</span><span class="tag">One good question</span></button>
+    <button class="choice" onclick="openThoughts('create')">Something to make <span>→</span><span class="tag">A tiny finished thing</span></button>
+    <button class="choice" onclick="openThoughts('notice')">Something to notice <span>→</span><span class="tag">Get out of your head</span></button>
+  </div>
+  <div class="nav"><button onclick="show('stats')">YOUR PATTERN</button><button onclick="show('profile')">PREFERENCES</button></div>
+</section>
+
+<section id="thoughts" class="screen">
+  <div class="eyebrow">CHOOSE ONE</div>
+  <h2 id="thoughtHeading">Don't scroll. Pick a thought.</h2>
+  <p class="small">These are deliberately finite. Choose one and go one layer deeper.</p>
+  <div id="thoughtList"></div>
+  <button class="ghost" onclick="openThoughts(lastKind)">Give me different ones</button>
+  <button class="ghost" onclick="show('home')">Not right now</button>
+</section>
+
+<section id="rabbit" class="screen">
+  <div class="pill" id="rabbitTopic">RABBIT HOLE</div>
+  <h1 id="rabbitTitle"></h1>
+  <div class="card"><p id="rabbitBody"></p></div>
+  <div class="choices-title" id="choicesTitle">Where do you want to go?</div>
+  <div id="rabbitChoices"></div>
+  <button class="primary" onclick="satisfied()">I'm satisfied</button>
+</section>
+
+<section id="complete" class="screen">
+  <div class="pill">EXIT COMPLETE</div>
+  <h1>You can leave now.</h1>
+  <p>No streak. No next item. No reason to keep the app open.</p>
+  <div class="card"><p id="completeText"></p></div>
+  <button class="primary" onclick="show('home')">LEAVE OFFLOOP</button>
+</section>
+
+<section id="stats" class="screen">
+  <div class="pill">YOUR PATTERN</div>
+  <h1>What keeps catching you?</h1>
+  <div class="statgrid">
+    <div class="stat"><div class="num" id="exits">0</div><div class="label">interruptions completed</div></div>
+    <div class="stat"><div class="num" id="deep">0</div><div class="label">rabbit holes explored</div></div>
+    <div class="stat"><div class="num" id="top">—</div><div class="label">current strongest interest</div></div>
+    <div class="stat"><div class="num">0</div><div class="label">infinite feeds consumed here</div></div>
+  </div>
+  <div class="card" style="margin-top:14px"><div class="eyebrow">DESIGN RULE</div><p>We optimize for <b>satisfaction</b>, not time spent inside the app.</p></div>
+  <button class="primary" onclick="show('home')">BACK</button>
+</section>
+</div>
+
+<script>
+const defaultProfile={age:"",interests:[],clicks:{},exits:0,deep:0};
+let profile=JSON.parse(localStorage.getItem("offloopProfile")||JSON.stringify(defaultProfile));
+let currentTopic="", currentDepth=0;
+
+const bank={
+  Psychology:[
+   {t:"Why do embarrassing memories stick so hard?",b:"Your brain doesn't store every moment equally. Emotion, attention and perceived social importance can make some memories unusually sticky.",next:["Why does the brain replay them?","Can you change how a memory feels?"]},
+   {t:"Why can anticipation feel better than the thing itself?",b:"Brains are sensitive to prediction and reward. Sometimes the build-up is where the strongest response happens.",next:["Why does uncertainty matter?","Why does music use anticipation so well?"]}
+  ],
+  Space:[
+   {t:"Could a planet exist without orbiting a star?",b:"Yes. Rogue planets can travel through interstellar space without a host star. The strange question is whether some could retain enough internal heat for interesting chemistry.",next:["How could one become rogue?","Could anything live there?"]},
+   {t:"What would happen if Earth stopped rotating?",b:"The surface would experience an enormous change in motion. But the deeper rabbit hole is why we don't notice Earth's rotation at all.",next:["Why don't we feel Earth moving?","How fast are we moving right now?"]}
+  ],
+  Music:[
+   {t:"Why can one song suddenly feel like a memory?",b:"Music is unusually good at binding emotion, context and autobiographical memory. A song can become a shortcut to an entire period of your life.",next:["Why do chills happen?","Why does nostalgia hurt a little?"]},
+   {t:"Why do unfinished melodies stay in your head?",b:"The brain tends to keep incomplete patterns mentally active. That's one reason a repeated fragment can feel impossible to dismiss.",next:["What makes a song 'sticky'?","Why does repetition sometimes become satisfying?"]}
+  ],
+  Technology:[
+   {t:"Why does infinite scrolling feel so different from a book?",b:"A book has structure and visible progress. An infinite feed removes the natural signal that says you've reached an endpoint.",next:["Why are unpredictable rewards powerful?","Can an interface create the opposite effect?"]}
+  ],
+  Philosophy:[
+   {t:"If nobody could remember an experience, would it still matter?",b:"That question opens into identity, meaning and whether value depends on being remembered.",next:["Does meaning require an observer?","What makes an experience 'yours'?"]}
+  ],
+  Biology:[
+   {t:"Why does your brain make you yawn when someone else yawns?",b:"Contagious yawning is associated with social and attentional processes, but its exact evolutionary purpose is still debated.",next:["Why do humans copy each other?","What else is socially contagious?"]}
+  ],
+  Art:[
+   {t:"Why can an unfinished drawing feel more alive than a perfect one?",b:"The viewer's brain completes missing information. Ambiguity can make participation part of the experience.",next:["Why do we like ambiguity?","Why does imperfection feel human?"]}
+  ],
+  History:[
+   {t:"What everyday object would confuse a person from 500 years ago most?",b:"The interesting answer isn't necessarily the most advanced machine. Ordinary objects reveal how much invisible infrastructure modern life depends on.",next:["What would they understand immediately?","Which modern habit would seem strangest?"]}
+  ],
+  Film:[
+   {t:"Why can a fictional character feel more real than someone you know?",b:"Stories give us unusually concentrated access to a character's motives, emotions and perspective.",next:["Why do we project ourselves onto characters?","Why do fictional deaths affect us?"]}
+  ],
+  Weird:[
+   {t:"Why does your own voice sound strange in a recording?",b:"When you speak, you hear sound through both air and vibrations through your body. A recording mostly gives you the external route.",next:["Why does the brain adapt to familiar sounds?","What else about ourselves do we perceive differently?"]}
+  ]
+};
+
+function save(){localStorage.setItem("offloopProfile",JSON.stringify(profile))}
+function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function todayExits(){return profile.today&&profile.today.date===todayStr()?profile.today.n:0}
+function update(){
+ const t=todayExits();
+ document.getElementById("status").textContent=t+(t===1?" exit today":" exits today");
+ document.getElementById("exits").textContent=profile.exits;
+ document.getElementById("deep").textContent=profile.deep;
+ let arr=Object.entries(profile.clicks).sort((a,b)=>b[1]-a[1]);
+ document.getElementById("top").textContent=arr[0]?arr[0][0]:"—";
+}
+function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");update()}
+function pickAge(el,v){document.querySelectorAll("#ages button").forEach(x=>x.classList.remove("selected"));el.classList.add("selected");profile.age=v}
+function toggleInterest(el,v){el.classList.toggle("selected");if(el.classList.contains("selected")){if(!profile.interests.includes(v))profile.interests.push(v)}else profile.interests=profile.interests.filter(x=>x!==v)}
+function saveProfile(){if(!profile.age)profile.age="18–20";if(!profile.interests.length)profile.interests=["Psychology","Music","Weird"];save();show("home")}
+function topics(){
+ let ints=profile.interests.length?profile.interests:Object.keys(bank);
+ return [...ints].sort((a,b)=>(profile.clicks[b]||0)-(profile.clicks[a]||0));
+}
+let lastKind="novelty", currentCard=null, shown=[];
+function openThoughts(kind){
+ lastKind=kind||"novelty";
+ let pool=[];
+ if(lastKind==="create")pool=CREATE.slice();
+ else if(lastKind==="notice")pool=NOTICE.slice();
+ else topics().forEach(topic=>{(bank[topic]||[]).forEach(x=>pool.push({...x,topic}))});
+ // prefer cards not shown recently so "different ones" really are different
+ let fresh=pool.filter(x=>!shown.includes(x.t));
+ if(fresh.length<3){shown=[];fresh=pool}
+ fresh.sort(()=>Math.random()-.5);
+ let list=fresh.slice(0,3);
+ list.forEach(x=>shown.push(x.t));
+ const headings={novelty:"Don't scroll. Pick one.",thought:"Pick one thought to sit with.",create:"Pick something small to make.",notice:"Pick something to notice."};
+ document.getElementById("thoughtHeading").textContent=headings[lastKind]||headings.novelty;
+ const box=document.getElementById("thoughtList");box.innerHTML="";
+ list.forEach(x=>{
+  let b=document.createElement("button");b.className="choice";
+  b.innerHTML=x.t+" <span>→</span><span class='tag'>"+x.topic+"</span>";
+  b.onclick=()=>openRabbit(x);
+  box.appendChild(b)
+ });
+ show("thoughts")
+}
+function openRabbit(x,back){
+ currentTopic=x.topic;currentDepth=1;currentCard=x;
+ if(!back){if(bank[x.topic])profile.clicks[x.topic]=(profile.clicks[x.topic]||0)+1;profile.deep++;save();}
+ document.getElementById("rabbitTopic").textContent=x.topic.toUpperCase();
+ document.getElementById("rabbitTitle").textContent=x.t;
+ document.getElementById("rabbitBody").textContent=x.b;
+ document.getElementById("choicesTitle").style.display=x.next.length?"block":"none";
+ const box=document.getElementById("rabbitChoices");box.innerHTML="";
+ x.next.forEach(n=>{
+  let b=document.createElement("button");b.textContent=n+" →";b.onclick=()=>goDeeper(n);box.appendChild(b)
+ });
+ show("rabbit")
+}
+function goDeeper(n){
+ if(bank[currentTopic])profile.clicks[currentTopic]=(profile.clicks[currentTopic]||0)+1;
+ currentDepth=2;save();
+ document.getElementById("rabbitTitle").textContent=n;
+ document.getElementById("rabbitBody").textContent=deeper[n]||"That's the end of this rabbit hole, and that's the point.";
+ document.getElementById("choicesTitle").style.display="none";
+ const box=document.getElementById("rabbitChoices");box.innerHTML="";
+ let b=document.createElement("button");b.textContent="← Back to the question";b.onclick=()=>openRabbit(currentCard,true);box.appendChild(b);
+}
+const deeper={
+"Why does the brain replay them?":"Emotionally important memories can be rehearsed repeatedly, which may strengthen their accessibility. The brain isn't necessarily trying to torture you; repetition can be part of how it updates and predicts social situations.",
+"Can you change how a memory feels?":"The memory itself and the emotional response to remembering it are not exactly the same thing. With time and new experiences, the emotional meaning attached to a memory can change.",
+"Why does uncertainty matter?":"When an outcome is unpredictable, the brain pays extra attention to whether it will arrive, and the anticipation itself can feel exciting. That is one reason surprise rewards can be harder to walk away from than predictable ones.",
+"Why does music use anticipation so well?":"Music sets up a pattern and then confirms, delays or bends it. Small violations of what the listener expects can create tension, and the resolution can feel rewarding.",
+"How could one become rogue?":"A planet can be thrown out of its system by a close pass with another planet or a passing star, or when a system becomes unstable. Some may also form on their own without ever orbiting a star.",
+"Could anything live there?":"That is speculative. Without a star there is no sunlight, so any life would need another energy source, such as heat from inside the planet. Scientists debate whether that could ever be enough.",
+"Why don't we feel Earth moving?":"We feel changes in speed, not steady motion. Earth turns at a nearly constant rate, and everything around us, including the air, moves along with it.",
+"How fast are we moving right now?":"At the equator, Earth's surface turns at roughly 1,670 km/h. Earth also orbits the Sun at about 30 km per second, and the Sun moves around the galaxy faster still.",
+"Why do chills happen?":"Strong musical moments can combine expectation, surprise and emotional meaning. For some listeners, that combination produces a noticeable physical response.",
+"Why does nostalgia hurt a little?":"Nostalgia often mixes positive memories with awareness that the original moment cannot be recovered. That mixture can make a pleasant memory feel bittersweet.",
+"What makes a song 'sticky'?":"Simple, repetitive melodies with a small twist tend to be easy for the brain to replay. Songs that are easy to hum often stay with us.",
+"Why does repetition sometimes become satisfying?":"Familiar patterns are easy to process, which can feel pleasant. Hearing something again lets us predict it and enjoy being right.",
+"Why are unpredictable rewards powerful?":"Behaviour experiments going back to B.F. Skinner found that rewards arriving at unpredictable times keep animals pressing a lever more persistently than rewards on a fixed schedule. Feeds use the same idea when you never know whether the next swipe will be great.",
+"Can an interface create the opposite effect?":"Yes. Designs with a clear endpoint, such as a 'you're all caught up' message, remove the pull to keep going. That is the idea behind OFFLOOP.",
+"Does meaning require an observer?":"Some philosophers argue meaning exists only for minds that can interpret it. Others say something can matter, like a kindness, even if nobody ever knows. The debate is still open.",
+"What makes an experience 'yours'?":"It could be the memory you keep, the body that felt it, or the perspective you had at that moment. Philosophers still disagree about which of these matters most.",
+"Why do humans copy each other?":"Copying is a fast way to learn and to fit in, and people begin doing it in infancy. Imitation helps skills and customs spread without being taught step by step.",
+"What else is socially contagious?":"Laughter, emotions and even some habits can spread between people. How strong each effect is, and why, is still being studied.",
+"Why do we like ambiguity?":"When something can be read in more than one way, our minds fill in the gaps. That effort can make the work feel personal to us.",
+"Why does imperfection feel human?":"Small flaws show that a person made something, which can feel warmer than something flawless. What counts as charming imperfection varies from person to person.",
+"What would they understand immediately?":"Simple tools like a knife, a cup or a candle would make sense right away. The confusing part would be the hidden systems behind our tools, like electricity and networks.",
+"Which modern habit would seem strangest?":"They might find it odd that we spend hours a day looking at small glowing screens, often alone in a room full of people.",
+"Why do we project ourselves onto characters?":"Stories invite us to imagine being someone else. Sharing a character's goals and fears can make us feel what they feel.",
+"Why do fictional deaths affect us?":"We know they are not real, but empathy still responds to a character we have come to care about. The time spent with them can make the loss feel real.",
+"Why does the brain adapt to familiar sounds?":"The brain saves effort by tuning out constant or predictable sounds, like a fridge hum, and pays attention when something changes.",
+"What else about ourselves do we perceive differently?":"A mirror shows your face flipped left to right, so photos can look slightly off. Your voice, handwriting and posture can also look or sound different from the outside."
+};
+const CREATE=[
+{t:"Write one sentence about today.",b:"Not for anyone else. Just one honest sentence, then stop.",topic:"Make",next:[]},
+{t:"Draw the thing closest to you.",b:"Use any pen and paper. Two minutes, no erasing.",topic:"Make",next:[]},
+{t:"Make a tiny list.",b:"Write three things you noticed today that you would normally skip past.",topic:"Make",next:[]},
+{t:"Hum a melody.",b:"Make up a short tune, about ten seconds long. It can be terrible.",topic:"Make",next:[]}
+];
+const NOTICE=[
+{t:"Find something blue.",b:"Look around the room. Find something blue and look at it for ten seconds.",topic:"Notice",next:[]},
+{t:"Look at the farthest thing you can see.",b:"Go to a window if you can. Notice its colour, size and shape.",topic:"Notice",next:[]},
+{t:"Listen for three sounds.",b:"Stay still for twenty seconds. Name three sounds you were not hearing a moment ago.",topic:"Notice",next:[]},
+{t:"Feel your feet.",b:"Notice how your feet touch the floor. Take three slow breaths.",topic:"Notice",next:[]}
+];
+function satisfied(){
+ profile.exits++;profile.today={date:todayStr(),n:todayExits()+1};save();
+ document.getElementById("completeText").textContent=currentDepth>1?"You followed a curiosity instead of an algorithm. That's the whole point.":"You gave your attention a place to land—and then stopped.";
+ show("complete")
+}
+update();
+</script>
+</body>
+</html>

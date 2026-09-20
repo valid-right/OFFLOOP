@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OFFLOOP</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; width: 320px; background: #151830; color: #eef0fc; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 14px; }
+  .wrap { padding: 18px; }
+  h1 { font-size: 1rem; letter-spacing: 0.16em; margin: 0 0 2px; }
+  h2 { font-size: 0.8rem; color: #a9afcf; font-weight: 500; margin: 20px 0 8px; }
+  p { margin: 0; color: #a9afcf; }
+  .ring { display: block; margin: 8px auto 0; }
+  .ringlabel { text-align: center; color: #a9afcf; font-size: 0.85rem; margin: 4px 0 14px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .stat { background: #20244a; border-radius: 16px; padding: 12px 8px; text-align: center; }
+  .num { font-size: 1.4rem; font-weight: 700; }
+  .lbl { font-size: 0.7rem; color: #a9afcf; }
+  .bars { display: flex; align-items: flex-end; gap: 6px; height: 56px; margin-top: 6px; }
+  .bars div { flex: 1; text-align: center; font-size: 0.65rem; color: #a9afcf; }
+  .bars i { display: block; background: #7fd6cf; border-radius: 6px 6px 2px 2px; min-height: 3px; margin-bottom: 3px; }
+  select, button { font: inherit; border-radius: 999px; border: 1.5px solid #363c68; background: #20244a; color: #eef0fc; padding: 6px 12px; }
+  button { cursor: pointer; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; }
+  .sites { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+  .sites label { display: flex; gap: 6px; align-items: center; }
+  .preview { display: flex; gap: 6px; }
+  .preview button { flex: 1; padding: 6px 0; }
+  .note { font-size: 0.75rem; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>OFFLOOP</h1>
+  <p>Your last 7 days</p>
+
+  <svg class="ring" id="ring" width="120" height="120" viewBox="0 0 120 120" aria-hidden="true"></svg>
+  <div class="ringlabel" id="ringlabel"></div>
+
+  <div class="grid">
+    <div class="stat"><div class="num" id="n-int">0</div><div class="lbl">interruptions</div></div>
+    <div class="stat"><div class="num" id="n-done">0</div><div class="lbl">breaks completed</div></div>
+    <div class="stat"><div class="num" id="n-min">0</div><div class="lbl">minutes away</div></div>
+  </div>
+
+  <h2>Interruptions per day (fewer is the goal)</h2>
+  <div class="bars" id="bars"></div>
+
+  <h2>Interrupt me after</h2>
+  <div class="row">
+    <select id="threshold">
+      <option value="20">20 seconds (demo)</option>
+      <option value="300">5 minutes</option>
+      <option value="600">10 minutes</option>
+      <option value="1200">20 minutes</option>
+    </select>
+  </div>
+
+  <h2>Watch these sites</h2>
+  <div class="sites" id="sites"></div>
+
+  <h2>Preview the screens</h2>
+  <div class="preview">
+    <button data-l="1">Gentle</button><button data-l="2">Direct</button><button data-l="3">Quiet</button>
+  </div>
+  <p class="note" id="previewnote">Open a supported site first, then tap one.</p>
+  <p class="note">Stays on this device. OFFLOOP counts scrolling time only. It never reads what you see.</p>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>
